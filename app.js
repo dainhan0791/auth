@@ -1,17 +1,19 @@
 const express = require('express');
 const app = express();
 const port = 3000
-
+const path = require('path');
 const bodyParser = require('body-parser');
 const accountRouter = require('./routes/accountRouter');
 const accountModel = require('./models/accountModel');
 const { off } = require('./models/accountModel');
 app.use(bodyParser.urlencoded({extended: false}))
 app.use(bodyParser.json())
-
+// static files
+app.use('/static',express.static(path.join(__dirname,'public')))
 
 app.get('/',(req, res) => {
-    res.json('Home page: ')
+    const page = path.join(__dirname,'index.html')
+    res.sendFile(page)
 })
 
 app.post('/register',(req, res,next) => {
@@ -67,7 +69,16 @@ app.get('/accounts',(req, res,next) =>{
         .skip(skip)
         .limit(PAGE_SIZE)
         .then((account) =>{
-            res.json(account)
+            accountModel.countDocuments({}).then((total) =>
+            {
+                let totalPage = Math.ceil(total / PAGE_SIZE)
+                
+                res.json({
+                    total: total,
+                    totalPage: totalPage,
+                    data: account
+                })
+            })
         })
         .catch((error) =>{
             res.status(500).send(error)
