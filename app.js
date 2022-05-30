@@ -1,62 +1,72 @@
 const express = require('express');
 const app = express();
+const cors = require('cors')
+app.use(cors())
 const port = 3000
 const path = require('path');
 const bodyParser = require('body-parser');
 const accountRouter = require('./routes/accountRouter');
 const accountModel = require('./models/accountModel');
-const { off } = require('./models/accountModel');
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
+app.use(cookieParser())
 app.use(bodyParser.urlencoded({extended: false}))
 app.use(bodyParser.json())
 // static files
 app.use('/static',express.static(path.join(__dirname,'public')))
 
-app.get('/',(req, res) => {
-    const page = path.join(__dirname,'index.html')
+
+// LOGIN
+const secret = "thaidainhan"
+
+app.get('/login',(req, res,next) => {
+    const page = path.join(__dirname,'login.html')
     res.sendFile(page)
 })
-
-app.post('/register',(req, res,next) => {
+app.post('/login',(req,res,next) => {
     const username = req.body.username
     const password = req.body.password
 
-    accountModel.findOne({username, password})
-    .then((account) => {
-        if(account){
-            res.json('Account already exists')
-        }else{
-            return accountModel.create({username, password})
-        }
+    accountModel.findOne({
+        username: username,
+        password: password,
     })
-    .then((data)=>{
-        res.json('Register Successfully')
-    })
-    .catch((err)=>{
-        res.status(400).json('Register Failure')
-    })
-})
-
-app.post('/login', (req,res,next)=>{
-    const username = req.body.username
-    const password = req.body.password
-
-    accountModel.findOne({ username: username, password: password})
-    .then(data => {
+    .then( (data) => {
         if(data){
-
-            res.json('Login successful')
+            const token = jwt.sign({
+                _id : data._id
+            }, secret)
+            return res.json({
+                message: 'Login successful',
+                token: token
+            })
         }else{
-            res.status(400).json('Login failed')
-
+            return res.json('Login failure')
         }
     })
-    .catch(err => {
-        res.status(500).json('Error Database')
+    .catch( (err) => {
+        res.status(500).json(err)
     })
-
+    
 })
-const PAGE_SIZE = 2
+app.get('/private', (req,res,next) => {
+    try{
+        const token  = req.cookies.token
+        const result = jwt.verify(token, secret)
+        
+        if(result){
+            next()
+        }
+        
+    } catch (err) {
+        res.redirect('/login')
+    }
+   
+},(req,res,next) => {
+    res.json('Welcome!')
+})
 
+const PAGE_SIZE = 2
 app.get('/accounts',(req, res,next) =>{
     let page = req.query.page
     if(page){

@@ -29,7 +29,7 @@ accountRouter.post('/',(req,res,next) => {
     const password = req.body.password
     const address = req.body.address
     const phone = req.body.phone
-
+    
     accountModel.create({
         username: username,
         password: password,

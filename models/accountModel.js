@@ -12,8 +12,8 @@ const {Schema} = mongoose
 const accountSchema = new Schema({
     username:'String',
     password:'String',
-    address:'String',
-    phone:'String',
+    // address:'String',
+    // phone:'String',
 },{
     collection:'accounts'
 })

@@ -1,5 +1,5 @@
 // https://pagination.js.org/
-let currentPage = 1
+// let currentPage = 1
 // const loadPage = (page) => {
 //     currentPage = page
 //     $.ajax({
@@ -115,3 +115,4 @@ const loadPage = (page) => {
     })
 }
 loadPage(1)
+
