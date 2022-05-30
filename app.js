@@ -53,17 +53,86 @@ app.get('/private', (req,res,next) => {
     try{
         const token  = req.cookies.token
         const result = jwt.verify(token, secret)
-        
-        if(result){
-            next()
-        }
+        accountModel.findOne({
+            _id: result
+        })
+        .then( (data) => {
+            if(data){
+                req.data = data
+                next()
+            }else{
+                res.status(403).json('Login Failed')
+            }
+        })
+        .catch( (err) =>{
+            res.status(500).json(err)
+        })
+       
         
     } catch (err) {
         res.redirect('/login')
     }
    
 },(req,res,next) => {
-    res.json('Welcome!')
+    res.json(req.data.username)
+})
+
+const checkLogin = (req, res,next) => {
+    try{
+        const token = req.cookies.token
+        const idAccount = jwt.verify(token,secret)
+        accountModel.findOne({
+            _id: idAccount
+        })
+        .then( (data) => {
+            if(data){
+                req.data = data
+                next()
+            }else{
+                res.json('NOT PERMISSION')
+            }
+        })
+        .catch((err) => {
+            res.status(500).json(err.message)
+        })
+
+    }catch(err){
+        res.status(500).json(err)
+    }
+}
+const checkStudent = (req,res,next) => {
+    const role = req.data.role;
+    if(role <= 3){
+        next()
+    }else{
+        res.json('NOT PERMISSION')
+    }
+}
+const checkTeacher = (req,res,next) => {
+    const role = req.data.role;
+    if(role >= 1){
+        next()
+    }else{
+        res.json('NOT PERMISSION')
+    }
+}
+const checkManager = (req,res,next) => {
+    const role = req.data.role;
+    if(role >=2){
+        next()
+    }else{
+        res.json('NOT PERMISSION')
+    }
+}
+app.get('/task',checkLogin,checkStudent, (req, res) => {
+    console.log(req.data)
+    res.json('All Task')
+})
+app.get('/student',checkLogin,checkTeacher, (req, res, next) => {
+    res.json('Student')
+})
+app.get('/teacher',checkLogin,checkManager, (req, res, next) => {
+    res.json('teacher')
 })
 
 const PAGE_SIZE = 2

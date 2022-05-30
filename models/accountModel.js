@@ -12,6 +12,7 @@ const {Schema} = mongoose
 const accountSchema = new Schema({
     username:'String',
     password:'String',
+    role:'String'
     // address:'String',
     // phone:'String',
 },{
