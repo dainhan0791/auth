@@ -23,6 +23,50 @@ app.get('/login',(req, res,next) => {
     const page = path.join(__dirname,'login.html')
     res.sendFile(page)
 })
+app.get('/home',(req, res, next) => {
+    const token = req.cookies.token
+    const decodeToken = jwt.verify(token,secret)
+    accountModel.find({_id:decodeToken._id})
+    .then( (data) => {
+        if(data.length == 0){
+            return res.redirect('/login')
+        }else{
+            if(data[0].role <= 2){
+                next()
+            }else{
+                return res.redirect('/login')
+            }
+        }
+    })
+    
+}
+,(req, res,next) => {
+    res.sendFile(path.join(__dirname,'home.html'))
+})
+app.post('/edit', (req, res, next) => {
+    const token = req.headers.cookie.split('=')[1]
+    const decodeToken = jwt.verify(token,secret)
+    accountModel.find({_id:decodeToken._id})
+    .then( (data) => {
+        if(data.length == 0){
+            return res.redirect('/login')
+        }else{
+            if(data[0].role == 2){
+                next()
+            }else{
+                return res.json({
+                    error: true,
+                    message: 'Ban Khong Co Quyen Sua'
+                })
+            }
+        }
+    })
+},
+(req, res)=>{
+    res.json('Sua thanh cong')
+    
+})
+
 app.post('/login',(req,res,next) => {
     const username = req.body.username
     const password = req.body.password
